@@ -1,0 +1,93 @@
+version: "3"
+networks:
+    douyin:
+        driver: bridge
+services:
+    db:
+        container_name: douyin_db
+        image: mysql
+        restart: always
+        environment:
+            - MYSQL_RANDOM_ROOT_PASSWORD=yes
+            - MYSQL_DATABASE=douyin
+            - TZ=Asia/Shanghai
+            - MYSQL_USER=douyin
+            - MYSQL_PASSWORD=123456789
+        # 通过config/sql下面的sql脚本初始化数据库
+        volumes:
+            - ./config/sql:/docker-entrypoint-initdb.d/
+            - ./data/db:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        networks:
+            - douyin
+    minio:
+        container_name: dy_minio
+        image: bitnami/minio
+        restart: always
+        ports:
+        - "9000:9000"
+        - "9001:9001"
+        volumes:
+        - ./data/minio:/data
+        environment:
+            MINIO_ROOT_USER: douyin
+            MINIO_ROOT_PASSWORD: Douyin123456##
+        command: server --console-address ":9001" /data
+        networks:
+            - douyin
+    redis:
+        container_name: dy_redis
+        image: redis
+        restart: always
+        ports:
+            - "6379:6379"
+        networks:
+            - douyin
+    # RocketMQ
+    namesrv:
+        image: apache/rocketmq:5.1.3
+        container_name: dy_namesrv
+        ports:
+            - 9876:9876
+        environment:
+            JAVA_OPT_EXT: "-server -Xms512m -Xmx512m"
+        volumes:
+            - ./data/rocketmq/namesrv/logs:/home/rocketmq/logs
+        command: sh mqnamesrv
+        restart: always
+        networks:
+            - douyin
+    broker1:
+        image: apache/rocketmq:5.1.3
+        container_name: dy_broker1
+        links:
+            - namesrv
+        ports:
+            - 10909:10909
+            - 10911:10911
+            - 10912:10912
+        environment:
+            NAMESRV_ADDR: namesrv:9876
+            JAVA_OPT_EXT: "-server -Xms512m -Xmx512m"
+        volumes:
+            - ./data/rocketmq/broker/logs:/home/rocketmq/logs
+            - ./data/rocketmq/broker/store:/home/rocketmq/store
+            - ./data/rocketmq/broker/conf/broker.conf:/opt/rocketmq-5.1.3/conf/broker.conf
+        command: sh mqbroker -c /opt/rocketmq-5.1.3/conf/broker.conf
+        restart: always
+        networks:
+            - douyin
+    # RocketMQ Dashboard
+    dashbord:
+        container_name: dy_dashboard
+        image: apacherocketmq/rocketmq-dashboard
+        ports:
+            - 8088:8080
+        environment:
+            JAVA_OPTS: "-Drocketmq.namesrv.addr=namesrv:9876"
+        restart: always
+        networks:
+            - douyin
+
+    
