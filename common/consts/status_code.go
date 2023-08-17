@@ -8,3 +8,8 @@ const (
 	// 业务失败状态码（0以外的都能表示失败）
 	StatusError StatusCode = -1
 )
+
+var StatusMsg = map[StatusCode]string{
+	StatusOk:    "OK",
+	StatusError: "Error",
+}
