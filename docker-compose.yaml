@@ -4,8 +4,8 @@ networks:
         driver: bridge
 services:
     db:
-        container_name: douyin_db
-        image: mysql
+        container_name: dy_mysql
+        image: mysql:8.0.34
         restart: always
         environment:
             - MYSQL_RANDOM_ROOT_PASSWORD=yes
@@ -21,24 +21,38 @@ services:
             - "3306:3306"
         networks:
             - douyin
+    nacos:
+        image: nacos/nacos-server:2.0.2
+        container_name: dy_nacos
+        environment:
+            - PREFER_HOST_MODE=hostname
+            - MODE=standalone
+        volumes:
+            - ./data/nacos/logs:/home/nacos/logs
+            - ./data/nacos/init.d/custom.properties:/home/nacos/init.d/custom.properties
+        ports:
+            - "8848:8848"
+        restart: always
+        networks:
+            - douyin
     minio:
         container_name: dy_minio
-        image: bitnami/minio
+        image: bitnami/minio:2023.7.18
         restart: always
         ports:
-        - "9000:9000"
-        - "9001:9001"
+            - "9000:9000"
+            - "9001:9001"
         volumes:
-        - ./data/minio:/data
+            - ./data/minio:/data
         environment:
             MINIO_ROOT_USER: douyin
             MINIO_ROOT_PASSWORD: Douyin123456##
-        command: server --console-address ":9001" /data
+        command: minio server --console-address ":9001" /data
         networks:
             - douyin
     redis:
         container_name: dy_redis
-        image: redis
+        image: redis:6.2.13
         restart: always
         ports:
             - "6379:6379"
@@ -47,7 +61,7 @@ services:
     # RocketMQ
     namesrv:
         image: apache/rocketmq:5.1.3
-        container_name: dy_namesrv
+        container_name: dy_mq_namesrv
         ports:
             - 9876:9876
         environment:
@@ -60,8 +74,8 @@ services:
             - douyin
     broker1:
         image: apache/rocketmq:5.1.3
-        container_name: dy_broker1
-        links:
+        container_name: dy_mq_broker1
+        depends_on:
             - namesrv
         ports:
             - 10909:10909
@@ -81,7 +95,9 @@ services:
     # RocketMQ Dashboard
     dashbord:
         container_name: dy_dashboard
-        image: apacherocketmq/rocketmq-dashboard
+        image: apacherocketmq/rocketmq-dashboard:1.0.0
+        depends_on:
+            - namesrv
         ports:
             - 8088:8080
         environment:
@@ -89,5 +105,3 @@ services:
         restart: always
         networks:
             - douyin
-
-    
