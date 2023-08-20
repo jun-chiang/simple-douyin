@@ -20,5 +20,7 @@ type UserVO struct {
 // 数据库对象
 type User struct {
 	UserVO
+	// 不序列化敏感字段
+	Password string `json:"-"`
 	GormBase
 }
