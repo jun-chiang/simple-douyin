@@ -8,7 +8,7 @@ import (
 
 func InitSocialServiceGateway(r *route.Engine) {
 
-	proxy := helper.NewReverseProxy("social-service")
+	proxy := helper.NewReverseProxy(consts.SocialService)
 
 	r.Any(consts.BasicURI+"/relation/*path", proxy.ServeHTTP)
 }

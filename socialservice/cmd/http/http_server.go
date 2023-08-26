@@ -20,7 +20,7 @@ func main() {
 		server.WithRegistry(
 			nacos.NewNacosRegistry(models.GetNacosNamingClient().Client),
 			&registry.Info{
-				ServiceName: "social-service",
+				ServiceName: consts.SocialService,
 				Addr:        utils.NewNetAddr("tcp", srvAddr),
 				Weight:      10,
 			}),
