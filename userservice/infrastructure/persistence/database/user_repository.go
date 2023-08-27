@@ -8,7 +8,7 @@ import (
 type UserRepository struct {
 }
 
-// 根据用户ID查询用户的关注列表
+// 创建用户
 func (repo *UserRepository) CreateUser(user *dbModels.User) (int64, error) {
 	db := config.GetInstance().Conn
 	err := db.Create(user).Error
@@ -18,6 +18,7 @@ func (repo *UserRepository) CreateUser(user *dbModels.User) (int64, error) {
 	return user.ID, err
 }
 
+// 根据用户名字查询用户
 func (repo *UserRepository) QueryUserByName(userName string) (*dbModels.User, error) {
 	db := config.GetInstance().Conn
 
