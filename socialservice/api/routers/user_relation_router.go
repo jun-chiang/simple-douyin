@@ -10,5 +10,6 @@ func InitRouter(r *route.Engine) {
 	{
 		relationGoup := r.Group("/douyin/relation")
 		relationGoup.GET("/follow/list", controllers.GetFollowListByUserId)
+		relationGoup.GET("/follower/list", controllers.GetFollowerListByUserId)
 	}
 }

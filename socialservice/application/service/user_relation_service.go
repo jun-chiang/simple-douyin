@@ -30,3 +30,10 @@ func (service *UserRelationService) GetFollowListByUserId(userId int64) (users [
 	users, err = service.repo.GetFollowListByUserId(userId)
 	return
 }
+
+// 获取用户的关注列表
+func (service *UserRelationService) GetFollowerListByUserId(userId int64) (users []*commonModels.User, err error) {
+	// 从数据库读取数据
+	users, err = service.repo.GetFollowerListByUserId(userId)
+	return
+}
