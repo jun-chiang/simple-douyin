@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	netConsts "github.com/cloudwego/hertz/pkg/protocol/consts"
-	commonConsts "github.com/jun-chiang/simple-douyin/common/consts"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/jun-chiang/simple-douyin/common/helper"
 	commonModels "github.com/jun-chiang/simple-douyin/common/models"
 	"github.com/jun-chiang/simple-douyin/socialservice/application/converters"
 	"github.com/jun-chiang/simple-douyin/socialservice/application/service"
@@ -28,34 +28,44 @@ func GetFollowListByUserId(c context.Context, ctx *app.RequestContext) {
 	// 接收json参数
 	var req DouyinRelationFollowListRequest
 	if err := ctx.Bind(&req); err != nil {
-		panic(err)
+		ctx.JSON(consts.StatusOK, DouyinRelationFollowListResponse{
+			BasicResponse: *helper.GetFailReponse("参数错误"),
+			UserList:      nil,
+		})
+		return
 	}
 	// 类型转换
 	userId, err := strconv.ParseInt(req.UserID, 0, 64)
 	if err != nil {
-		panic(err)
+		ctx.JSON(consts.StatusOK, DouyinRelationFollowListResponse{
+			BasicResponse: *helper.GetFailReponse("user_id错误"),
+			UserList:      nil,
+		})
+		return
 	}
 	// 获取应用层服务
 	userRelationService, err := service.NewUserRelationService(&database.UserRelationRepository{})
 	if err != nil {
-		panic(err)
+		ctx.JSON(consts.StatusOK, DouyinRelationFollowListResponse{
+			BasicResponse: *helper.GetFailReponse("查询失败"),
+			UserList:      nil,
+		})
+		return
 	}
 	// 调用服务获取数据
 	users, err := userRelationService.GetFollowListByUserId(userId)
 	// 转换user为userVo
 	userVoList := converters.NewUserConverter().ToUserVoList(users)
-	// 构建返回对象
-	respData := DouyinRelationFollowListResponse{
-		BasicResponse: commonModels.BasicResponse{
-			StatusCode: commonConsts.StatusOk,
-			StatusMsg:  "success",
-		},
-		UserList: userVoList,
-	}
-	// 控制返回数据
+
 	if err != nil {
-		ctx.JSON(netConsts.StatusBadRequest, nil)
+		ctx.JSON(consts.StatusOK, DouyinRelationFollowListResponse{
+			BasicResponse: *helper.GetFailReponse("参数错误"),
+			UserList:      nil,
+		})
 	} else {
-		ctx.JSON(netConsts.StatusOK, respData)
+		ctx.JSON(consts.StatusOK, DouyinRelationFollowListResponse{
+			BasicResponse: *helper.GetSuccesReponse("success"),
+			UserList:      userVoList,
+		})
 	}
 }
